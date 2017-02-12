@@ -22,12 +22,24 @@ logger = logging.getLogger('SimilarFace')
 
 class WeibocrawlerSpider(CrawlSpider):
     name = "weibocrawler"
-    start_urls = ['http://m.weibo.cn/p/100101B2094654D06AA5F8429D/']
+    allowed_domains = ["weibo.com"]
+    start_urls = ['http://weibo.com/p/100101B2094654D06AA5F8429D?containerid=100101B2094654D06AA5F8429D&sourceType=weixin&featurecode=20000180&oid=4071365839752392&luicode=10000011&lfid=100101B2094654D06AA5F8429D#1486380822494']
 
-    def parse(self, response):
-        cards = response.xpath("//div[@class='card-main']")
-        print cards,'*'*8, response
-        logger.info("lens is {0}".format(len(cards)))
+    rules = [
+        Rule(
+            LinkExtractor(
+                restrict_xpaths='//a[contains(@class,"next") and (@bpfilter="page")]'
+            ), callback="parseWeibo", follow=True,
+        )
+    ]
+
+    def parse_start_url(self, response):
+        with open("/tmp/tmpres.html","w") as f:
+            f.write(response.text.encode('utf8'))
+        print response.xpath("//div")
+        self.parseWeibo(response)
+
+    def parseWeibo(self, response):
         details = response.xpath("//div[@class='WB_detail']")
         for detail in details:
             weiboItem = WeiboItem()
